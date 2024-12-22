@@ -41,7 +41,7 @@ func TestEvaluateExpression(t *testing.T) {
 					t.Errorf("expected status %d, got %d", http.StatusOK, res.StatusCode)
 				}
 
-				var result Result
+				var result application.Result
 				if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
 					t.Fatalf("failed to decode response: %v", err)
 				}

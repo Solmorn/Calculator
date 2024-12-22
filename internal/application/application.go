@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/Solmorn/Calculator/pkg/calculation"
 )
@@ -36,7 +37,7 @@ type Request struct {
 }
 
 type Result struct {
-	Result float64 `json:"result"`
+	Result string `json:"result"`
 }
 
 func CalcHandler(w http.ResponseWriter, r *http.Request) {
@@ -48,15 +49,9 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fastr, err := calculation.Calc(request.Expression)
-	if err != nil {
-		if err == calculation.ErrDivisionByZero {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		} else if err == calculation.ErrInvalidExpression {
-			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-		}
-	} else {
+	if err == nil {
 		result := Result{
-			Result: fastr,
+			Result: strconv.FormatFloat(fastr, 'f', 6, 64),
 		}
 
 		if err := json.NewEncoder(w).Encode(result); err != nil {
@@ -65,6 +60,12 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 
+	} else {
+		if err == calculation.ErrDivisionByZero {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else if err == calculation.ErrInvalidExpression {
+			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		}
 	}
 }
 
