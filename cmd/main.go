@@ -1,11 +1,10 @@
 package main
 
-inport(
-	"github.com/solmorn/Calculator/internal/application"
+import (
+	"github.com/Solmorn/Calculator/internal/application"
 )
 
-
-func main(){
+func main() {
 	app = application.New()
-    app.Run()
+	app.Run()
 }
