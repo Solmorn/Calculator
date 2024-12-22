@@ -1,13 +1,9 @@
 package application
 
 import (
-	"bufio"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/Solmorn/Calculator/pkg/calculation"
 )
@@ -35,37 +31,12 @@ func New() *Application {
 	}
 }
 
-// Функция запуска приложения
-// тут будем читать введенную строку и после нажатия ENTER писать результат работы программы на экране
-// если пользователь ввел exit - то останаваливаем приложение
-func (a *Application) Run() error {
-	for {
-		// читаем выражение для вычисления из командной строки
-		log.Println("input expression")
-		reader := bufio.NewReader(os.Stdin)
-		text, err := reader.ReadString('\n')
-		if err != nil {
-			log.Println("failed to read expression from console")
-		}
-		// убираем пробелы, чтобы оставить только вычислемое выражение
-		text = strings.TrimSpace(text)
-		// выходим, если ввели команду "exit"
-		if text == "exit" {
-			log.Println("aplication was successfully closed")
-			return nil
-		}
-		//вычисляем выражение
-		result, err := calculation.Calc(text)
-		if err != nil {
-			log.Println(text, " calculation failed wit error: ", err)
-		} else {
-			log.Println(text, "=", result)
-		}
-	}
-}
-
 type Request struct {
 	Expression string `json:"expression"`
+}
+
+type Result struct {
+	Result float64 `json:"result"`
 }
 
 func CalcHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,11 +47,24 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	result, err := calculation.Calc(request.Expression)
+	fastr, err := calculation.Calc(request.Expression)
 	if err != nil {
-		fmt.Fprintf(w, "err: %s", err.Error())
+		if err == calculation.ErrDivisionByZero {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else if err == calculation.ErrInvalidExpression {
+			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		}
 	} else {
-		fmt.Fprintf(w, "result: %f", result)
+		result := Result{
+			Result: fastr,
+		}
+
+		if err := json.NewEncoder(w).Encode(result); err != nil {
+
+			http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+
+		}
+
 	}
 }
 
