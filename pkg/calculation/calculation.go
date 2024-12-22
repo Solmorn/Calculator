@@ -1,7 +1,6 @@
 package calculation
 
 import (
-	"fmt"
 	"strconv"
 	"unicode"
 )
@@ -150,10 +149,10 @@ func Calc(expression string) (float64, error) {
 		if ans != ans+1 {
 			return ans, nil
 		} else {
-			return 0, fmt.Errorf("Expression was incorrect")
+			return 0, ErrDivisionByZero
 		}
 	} else {
-		return 0, fmt.Errorf("Expression was incorrect")
+		return 0, ErrInvalidExpression
 	}
 }
 
